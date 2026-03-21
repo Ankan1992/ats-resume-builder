@@ -434,6 +434,46 @@ h2 {
 .template-info h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
 .template-info p { font-size: 11px; color: var(--gray-500); }
 
+.template-tones { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 4px; }
+.template-tone-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Template filter bar */
+.template-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-right: 4px;
+}
+.filter-btn {
+  padding: 6px 16px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 20px;
+  background: white;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
 /* Keywords */
 .keywords-section {
   background: white;

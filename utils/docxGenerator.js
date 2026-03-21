@@ -7,14 +7,16 @@ const {
   ShadingType, convertInchesToTwip
 } = docx;
 
-// Template color schemes
-const colorSchemes = {
-  classic: { primary: '1a1a1a', accent: '2c3e50', line: '95a5a6', bg: 'f8f9fa' },
-  modern: { primary: '1a1a1a', accent: '2563eb', line: '93c5fd', bg: 'eff6ff' },
-  elegant: { primary: '1a1a1a', accent: '7c3aed', line: 'c4b5fd', bg: 'f5f3ff' },
-  bold: { primary: '1a1a1a', accent: 'dc2626', line: 'fca5a5', bg: 'fef2f2' },
-  minimal: { primary: '333333', accent: '555555', line: 'cccccc', bg: 'f5f5f5' }
-};
+// Dynamic color schemes from template registry
+const { getTemplate } = require('../templates/templateRegistry');
+
+function getColorScheme(templateId) {
+  const tmpl = getTemplate(templateId);
+  const accent = tmpl.colors.accent.replace('#', '');
+  const text = tmpl.colors.text.replace('#', '');
+  const textLight = tmpl.colors.textLight.replace('#', '');
+  return { primary: text, accent: accent, line: textLight, bg: 'f8f9fa' };
+}
 
 function highlightKeywords(text, keywords) {
   if (!keywords || keywords.length === 0) return [new TextRun({ text, size: 22 })];
@@ -189,7 +191,7 @@ const toneLabels = {
 };
 
 async function generateDOCX(resumeData, template, keywords, outputPath, tone) {
-  const colors = colorSchemes[template] || colorSchemes.classic;
+  const colors = getColorScheme(template);
   const labels = toneLabels[tone] || toneLabels.general;
 
   const sections = [];

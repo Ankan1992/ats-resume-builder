@@ -258,107 +258,18 @@
           </div>
         </div>
 
-        <!-- Templates -->
-        <div class="templates-grid">
-          <div class="template-card selected" data-template="classic" onclick="selectTemplate('classic')">
-            <div class="template-preview classic-preview">
-              <div class="tp-header"></div>
-              <div class="tp-line w80"></div>
-              <div class="tp-line w60"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w90"></div>
-              <div class="tp-line w70"></div>
-              <div class="tp-line w85"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w75"></div>
-              <div class="tp-line w65"></div>
-            </div>
-            <div class="template-info">
-              <h4>Classic</h4>
-              <p>Traditional serif design. Timeless and professional.</p>
-            </div>
-            <div class="template-check">✓</div>
-          </div>
-
-          <div class="template-card" data-template="modern" onclick="selectTemplate('modern')">
-            <div class="template-preview modern-preview">
-              <div class="tp-header"></div>
-              <div class="tp-line w80"></div>
-              <div class="tp-line w60"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w90"></div>
-              <div class="tp-line w70"></div>
-              <div class="tp-line w85"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w75"></div>
-              <div class="tp-line w65"></div>
-            </div>
-            <div class="template-info">
-              <h4>Modern</h4>
-              <p>Clean blue accents. Contemporary and sleek.</p>
-            </div>
-            <div class="template-check">✓</div>
-          </div>
-
-          <div class="template-card" data-template="elegant" onclick="selectTemplate('elegant')">
-            <div class="template-preview elegant-preview">
-              <div class="tp-header"></div>
-              <div class="tp-line w80"></div>
-              <div class="tp-line w60"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w90"></div>
-              <div class="tp-line w70"></div>
-              <div class="tp-line w85"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w75"></div>
-              <div class="tp-line w65"></div>
-            </div>
-            <div class="template-info">
-              <h4>Elegant</h4>
-              <p>Purple sophistication. Distinctive and refined.</p>
-            </div>
-            <div class="template-check">✓</div>
-          </div>
-
-          <div class="template-card" data-template="bold" onclick="selectTemplate('bold')">
-            <div class="template-preview bold-preview">
-              <div class="tp-header"></div>
-              <div class="tp-line w80"></div>
-              <div class="tp-line w60"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w90"></div>
-              <div class="tp-line w70"></div>
-              <div class="tp-line w85"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w75"></div>
-              <div class="tp-line w65"></div>
-            </div>
-            <div class="template-info">
-              <h4>Bold</h4>
-              <p>Red accent power. Strong and impactful.</p>
-            </div>
-            <div class="template-check">✓</div>
-          </div>
-
-          <div class="template-card" data-template="minimal" onclick="selectTemplate('minimal')">
-            <div class="template-preview minimal-preview">
-              <div class="tp-header"></div>
-              <div class="tp-line w80"></div>
-              <div class="tp-line w60"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w90"></div>
-              <div class="tp-line w70"></div>
-              <div class="tp-line w85"></div>
-              <div class="tp-section"></div>
-              <div class="tp-line w75"></div>
-              <div class="tp-line w65"></div>
-            </div>
-            <div class="template-info">
-              <h4>Minimal</h4>
-              <p>Ultra-clean whitespace. Let content shine.</p>
-            </div>
-            <div class="template-check">✓</div>
-          </div>
+        <!-- Templates (dynamically loaded) -->
+        <div class="template-filter">
+          <span class="filter-label">Show:</span>
+          <button class="filter-btn active" data-filter="recommended" onclick="filterTemplates('recommended')">Recommended for You</button>
+          <button class="filter-btn" data-filter="all" onclick="filterTemplates('all')">All Templates</button>
+          <button class="filter-btn" data-filter="business" onclick="filterTemplates('business')">Business</button>
+          <button class="filter-btn" data-filter="technical" onclick="filterTemplates('technical')">Technical</button>
+          <button class="filter-btn" data-filter="creative" onclick="filterTemplates('creative')">Creative</button>
+          <button class="filter-btn" data-filter="academic" onclick="filterTemplates('academic')">Academic</button>
+        </div>
+        <div class="templates-grid" id="templatesGrid">
+          <!-- Populated dynamically -->
         </div>
 
         <!-- Format Selection -->

@@ -50,6 +50,15 @@ const upload = multer({
 
 // Routes
 
+// Get template registry
+app.get('/api/templates', (req, res) => {
+  const { templates } = require('./templates/templateRegistry');
+  const tone = req.query.tone || 'general';
+  const { getTemplatesForTone } = require('./templates/templateRegistry');
+  const sorted = getTemplatesForTone(tone);
+  res.json({ templates: sorted.map(t => ({ id: t.id, name: t.name, description: t.description, tones: t.tones, category: t.category, accentColor: t.colors.accent })) });
+});
+
 // Upload and parse resume
 app.post('/api/upload', upload.single('resume'), async (req, res) => {
   try {

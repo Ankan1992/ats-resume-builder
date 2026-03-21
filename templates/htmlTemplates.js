@@ -114,44 +114,17 @@ function buildAdditionalHTML(additionalSections, keywords) {
   return html;
 }
 
-// Template styles
-const templateStyles = {
-  classic: `
-    :root { --accent: #2c3e50; --accent-light: #34495e; --text: #1a1a1a; --text-light: #555; --border: #2c3e50; --bg-header: #fff; }
-    body { font-family: 'Georgia', 'Times New Roman', serif; }
-    .header { border-bottom: 3px solid var(--accent); padding-bottom: 12px; }
-    .name { font-size: 28px; letter-spacing: 2px; }
-    h2 { font-size: 13px; letter-spacing: 3px; border-bottom: 1.5px solid var(--accent); padding-bottom: 4px; }
-  `,
-  modern: `
-    :root { --accent: #2563eb; --accent-light: #3b82f6; --text: #1e293b; --text-light: #64748b; --border: #2563eb; --bg-header: #fff; }
-    body { font-family: 'Calibri', 'Helvetica Neue', Arial, sans-serif; }
-    .header { border-bottom: 3px solid var(--accent); padding-bottom: 14px; }
-    .name { font-size: 30px; letter-spacing: 1px; }
-    h2 { font-size: 12px; letter-spacing: 3px; background: #eff6ff; padding: 5px 10px; border-left: 3px solid var(--accent); }
-  `,
-  elegant: `
-    :root { --accent: #7c3aed; --accent-light: #8b5cf6; --text: #1e1b4b; --text-light: #6b7280; --border: #7c3aed; --bg-header: #fff; }
-    body { font-family: 'Garamond', 'Georgia', serif; }
-    .header { border-bottom: 2px double var(--accent); padding-bottom: 14px; }
-    .name { font-size: 32px; letter-spacing: 3px; font-weight: 400; }
-    h2 { font-size: 13px; letter-spacing: 4px; border-bottom: 1px solid var(--accent); padding-bottom: 5px; }
-  `,
-  bold: `
-    :root { --accent: #dc2626; --accent-light: #ef4444; --text: #1a1a1a; --text-light: #6b7280; --border: #dc2626; --bg-header: #fff; }
-    body { font-family: 'Arial', 'Helvetica', sans-serif; }
-    .header { border-bottom: 4px solid var(--accent); padding-bottom: 12px; }
-    .name { font-size: 30px; letter-spacing: 1px; font-weight: 900; }
-    h2 { font-size: 13px; letter-spacing: 2px; background: #fef2f2; padding: 5px 10px; border-left: 4px solid var(--accent); }
-  `,
-  minimal: `
-    :root { --accent: #374151; --accent-light: #6b7280; --text: #111827; --text-light: #9ca3af; --border: #d1d5db; --bg-header: #fff; }
-    body { font-family: 'Helvetica Neue', 'Arial', sans-serif; }
-    .header { border-bottom: 1px solid #e5e7eb; padding-bottom: 14px; }
-    .name { font-size: 26px; letter-spacing: 0.5px; font-weight: 300; }
-    h2 { font-size: 11px; letter-spacing: 3px; color: var(--accent-light); border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-  `
-};
+// Template styles — dynamically built from registry
+const { getTemplate } = require('./templateRegistry');
+
+function getTemplateStyle(templateId) {
+  const tmpl = getTemplate(templateId);
+  const c = tmpl.colors;
+  return `
+    :root { --accent: ${c.accent}; --accent-light: ${c.accentLight}; --text: ${c.text}; --text-light: ${c.textLight}; --border: ${c.border}; --bg-header: #fff; }
+    ${tmpl.css}
+  `;
+}
 
 // Tone-specific section labels
 const toneLabels = {
@@ -202,7 +175,7 @@ function getLabels(tone) {
 }
 
 function buildHTML(resumeData, template, keywords, tone) {
-  const style = templateStyles[template] || templateStyles.classic;
+  const style = getTemplateStyle(template);
   const labels = getLabels(tone);
 
   const body = `

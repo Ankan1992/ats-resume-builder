@@ -394,14 +394,20 @@ function updateKeywordSuggestions() {
 
 // Listen for tone changes
 document.querySelectorAll('input[name="tone"]').forEach(radio => {
-  radio.addEventListener('change', updateKeywordSuggestions);
+  radio.addEventListener('change', () => {
+    updateKeywordSuggestions();
+    loadTemplates();
+  });
 });
 
-// Initialize suggestions when step 3 is shown
+// Initialize suggestions and templates when step 3 is shown
 const origGoToStep = goToStep;
 goToStep = function(step) {
   origGoToStep(step);
-  if (step === 3) updateKeywordSuggestions();
+  if (step === 3) {
+    updateKeywordSuggestions();
+    loadTemplates();
+  }
 };
 
 // ===== Collect Form Data =====
@@ -453,11 +459,84 @@ function collectFormData() {
 }
 
 // ===== Template Selection =====
+let allTemplates = [];
+let currentFilter = 'recommended';
+
 function selectTemplate(template) {
   selectedTemplate = template;
   document.querySelectorAll('.template-card').forEach(card => {
     card.classList.toggle('selected', card.dataset.template === template);
   });
+}
+
+async function loadTemplates() {
+  const tone = document.querySelector('input[name="tone"]:checked')?.value || 'general';
+  try {
+    const res = await fetch(`/api/templates?tone=${tone}`);
+    const data = await res.json();
+    allTemplates = data.templates || [];
+    filterTemplates(currentFilter);
+  } catch (err) {
+    console.error('Failed to load templates:', err);
+  }
+}
+
+function filterTemplates(filter) {
+  currentFilter = filter;
+  // Update filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+
+  const tone = document.querySelector('input[name="tone"]:checked')?.value || 'general';
+  let filtered;
+
+  if (filter === 'recommended') {
+    // Show templates that match the selected tone first (they come pre-sorted from API)
+    filtered = allTemplates.filter(t => t.tones && t.tones.includes(tone));
+    if (filtered.length === 0) filtered = allTemplates.slice(0, 6);
+  } else if (filter === 'all') {
+    filtered = allTemplates;
+  } else {
+    // Filter by category
+    filtered = allTemplates.filter(t => t.category === filter || (t.tones && t.tones.includes(filter)));
+  }
+
+  renderTemplateGrid(filtered);
+}
+
+function renderTemplateGrid(templates) {
+  const grid = document.getElementById('templatesGrid');
+  if (!templates || templates.length === 0) {
+    grid.innerHTML = '<p style="text-align:center;color:var(--gray-500);grid-column:1/-1;padding:24px;">No templates found for this filter.</p>';
+    return;
+  }
+
+  grid.innerHTML = templates.map(t => {
+    const accent = t.accentColor || '#2c3e50';
+    const isSelected = selectedTemplate === t.id;
+    return `
+      <div class="template-card${isSelected ? ' selected' : ''}" data-template="${t.id}" onclick="selectTemplate('${t.id}')">
+        <div class="template-check">✓</div>
+        <div class="template-preview">
+          <div class="tp-header" style="background:${accent}"></div>
+          <div class="tp-section" style="background:${accent}"></div>
+          <div class="tp-line w90"></div>
+          <div class="tp-line w85"></div>
+          <div class="tp-line w75"></div>
+          <div class="tp-section" style="background:${accent}"></div>
+          <div class="tp-line w80"></div>
+          <div class="tp-line w90"></div>
+          <div class="tp-line w70"></div>
+        </div>
+        <div class="template-info">
+          <h4>${escapeHTML(t.name)}</h4>
+          <p>${escapeHTML(t.description || '')}</p>
+          ${t.tones ? `<div class="template-tones">${t.tones.map(tn => `<span class="template-tone-badge">${tn}</span>`).join('')}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ===== Generate Resume =====
