@@ -69,6 +69,9 @@ app.post('/api/upload', upload.single('resume'), async (req, res) => {
     const ext = path.extname(req.file.originalname).toLowerCase();
     const parsed = await parseResume(filePath, ext);
 
+    console.log('=== Parsed Resume ===');
+    console.log(JSON.stringify(parsed, null, 2));
+
     // Clean up uploaded file
     fs.unlink(filePath, () => {});
 
