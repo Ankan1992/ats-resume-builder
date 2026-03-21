@@ -16,6 +16,10 @@ async function parseResume(filePath, ext) {
     throw new Error('Unsupported file format');
   }
 
+  console.log('=== RAW TEXT FROM PDF ===');
+  console.log(rawText);
+  console.log('=== END RAW TEXT ===');
+
   return extractSections(rawText);
 }
 
@@ -31,11 +35,11 @@ const PERCENTAGE_REGEX = /(\d{1,3}(?:\.\d+)?)\s*(?:%|percent|marks|cgpa|sgpa|gpa
 const GPA_REGEX = /(?:cgpa|sgpa|gpa|cpi)\s*[:=]?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(\d+))?/i;
 const RANK_REGEX = /(?:rank|percentile|topper|gold\s*medal|silver\s*medal|distinction|first\s*class|second\s*class|honours|honors|merit|dean'?s?\s*list|valedictorian|summa\s*cum\s*laude|magna\s*cum\s*laude|cum\s*laude)/i;
 
-// Known degree patterns
-const DEGREE_PATTERNS = /\b(B\.?\s*Tech|M\.?\s*Tech|B\.?\s*E|M\.?\s*E|B\.?\s*Sc|M\.?\s*Sc|B\.?\s*A|M\.?\s*A|B\.?\s*Com|M\.?\s*Com|BBA|MBA|BCA|MCA|Ph\.?\s*D|B\.?\s*Arch|M\.?\s*Arch|LLB|LLM|MBBS|MD|MS|B\.?\s*Des|M\.?\s*Des|Diploma|Higher\s*Secondary|Secondary|HSC|SSC|ICSE|ISC|CBSE|Class\s*(?:X|XII|10|12)|(?:10|12)(?:th|st|nd|rd)\s*(?:grade|class|standard)?|Bachelor|Master|Doctor|Post\s*Graduate|Under\s*Graduate|Intermediate)\b/i;
+// Known degree patterns — handles B.E., B.E, BE, B. E., etc.
+const DEGREE_PATTERNS = /(?:^|\b|\s)(B\.?\s*\.?\s*E\.?|M\.?\s*\.?\s*E\.?|B\.?\s*\.?\s*Tech\.?|M\.?\s*\.?\s*Tech\.?|B\.?\s*\.?\s*Sc\.?|M\.?\s*\.?\s*Sc\.?|B\.?\s*\.?\s*A\.?|M\.?\s*\.?\s*A\.?|B\.?\s*\.?\s*Com\.?|M\.?\s*\.?\s*Com\.?|B\.?\s*\.?\s*Arch\.?|M\.?\s*\.?\s*Arch\.?|B\.?\s*\.?\s*Des\.?|M\.?\s*\.?\s*Des\.?|B\.?\s*\.?\s*Eng\.?|M\.?\s*\.?\s*Eng\.?|B\.?\s*\.?\s*Pharm\.?|M\.?\s*\.?\s*Pharm\.?|B\.?\s*\.?\s*Ed\.?|M\.?\s*\.?\s*Ed\.?|BBA|MBA|BCA|MCA|Ph\.?\s*D\.?|LLB|LLM|MBBS|MD|MS|BMS|BFA|MFA|Diploma|Higher\s*Secondary|Secondary|HSC|SSC|ICSE|ISC|CBSE|PGDM|PGDBM|PGP|Class\s*[-–—]?\s*(?:X{1,3}I{0,2}|IV|V?I{0,3}|10|12|11|9)|(?:10|12|11|9)(?:th|st|nd|rd)\s*(?:grade|class|standard|std)?|Bachelor(?:\s*(?:of|in)\s*\w+)?|Master(?:\s*(?:of|in)\s*\w+)?|Doctor(?:ate)?(?:\s*(?:of|in)\s*\w+)?|Post\s*[-]?\s*Graduate|Under\s*[-]?\s*Graduate|Intermediate|Engineering|(?:B|M)\.?\s*(?:Phil|Litt)|Associate(?:\s*Degree)?)/i;
 
 // Known institution indicators
-const INSTITUTION_INDICATORS = /\b(university|institute|college|school|academy|iit|iim|nit|bits|iisc|iiit|isb|xlri|fms|jbims|nmims|symbiosis|amity|vit|srm|manipal|jadavpur|calcutta|delhi|mumbai|chennai|bangalore|bengaluru|hyderabad|pune|kolkata|board|council|cbse|icse)\b/i;
+const INSTITUTION_INDICATORS = /\b(university|univeristy|univ\.?|institute|institution|college|school|academy|polytechnic|iit|iim|nit|bits|iisc|iiit|isb|xlri|fms|jbims|nmims|symbiosis|amity|vit|srm|manipal|jadavpur|calcutta|delhi|mumbai|chennai|bangalore|bengaluru|hyderabad|pune|kolkata|lucknow|kanpur|kharagpur|roorkee|guwahati|madras|bombay|pilani|board|council|cbse|icse|vidyalaya|vidyapeeth|vishwavidyalaya|mahavidyalaya|kendriya|navodaya|sainik)\b/i;
 
 // Common company suffixes/indicators
 const COMPANY_INDICATORS = /\b(technologies|technology|tech|pvt|ltd|limited|private|inc|corp|corporation|llc|llp|solutions|services|consulting|consultancy|group|enterprises|systems|software|labs|ventures|capital|partners|industries|global|india|analytics|digital|networks|infosys|tcs|wipro|hcl|cognizant|accenture|deloitte|kpmg|ey|pwc|mckinsey|bain|bcg|goldman|morgan|jpmorgan|amazon|google|microsoft|meta|facebook|apple|flipkart|swiggy|zomato|paytm|razorpay|juspay|zestmoney|cred|phonepe|bharatpe|groww|zerodha|byju|unacademy)\b/i;
