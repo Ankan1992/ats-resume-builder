@@ -4,10 +4,17 @@ const { buildHTML } = require('../templates/htmlTemplates');
 async function generatePDF(resumeData, template, keywords, outputPath, tone) {
   const html = buildHTML(resumeData, template, keywords, tone);
 
-  const browser = await puppeteer.launch({
+  const launchOptions = {
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+  };
+
+  // Use system Chromium if set (Docker/Render deployment)
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  const browser = await puppeteer.launch(launchOptions);
 
   try {
     const page = await browser.newPage();
