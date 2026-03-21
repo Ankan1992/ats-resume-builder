@@ -80,6 +80,14 @@ function buildCertsHTML(certifications, label) {
   return html;
 }
 
+function buildAchievementsHTML(achievements, label) {
+  if (!achievements || achievements.length === 0) return '';
+  let html = `<div class="section"><h2>${escapeHTML(label || 'Achievements & Honors')}</h2><ul>`;
+  achievements.forEach(a => { html += `<li>${escapeHTML(a)}</li>`; });
+  html += '</ul></div>';
+  return html;
+}
+
 function buildProjectsHTML(projects, keywords, label) {
   if (!projects || projects.length === 0) return '';
   let html = `<div class="section"><h2>${escapeHTML(label || 'Projects')}</h2>`;
@@ -134,6 +142,7 @@ const toneLabels = {
     education: 'Education',
     skills: 'Technical Skills & Tools',
     certifications: 'Certifications & Training',
+    achievements: 'Achievements & Honors',
     projects: 'Technical Projects'
   },
   business: {
@@ -142,6 +151,7 @@ const toneLabels = {
     education: 'Education & Credentials',
     skills: 'Core Competencies',
     certifications: 'Certifications & Licenses',
+    achievements: 'Achievements & Recognition',
     projects: 'Key Initiatives'
   },
   creative: {
@@ -150,6 +160,7 @@ const toneLabels = {
     education: 'Education',
     skills: 'Skills & Tools',
     certifications: 'Awards & Certifications',
+    achievements: 'Achievements & Honors',
     projects: 'Selected Work'
   },
   academic: {
@@ -158,6 +169,7 @@ const toneLabels = {
     education: 'Education',
     skills: 'Research Skills & Methodologies',
     certifications: 'Grants, Awards & Publications',
+    achievements: 'Honors & Distinctions',
     projects: 'Research Projects'
   },
   general: {
@@ -166,6 +178,7 @@ const toneLabels = {
     education: 'Education',
     skills: 'Skills',
     certifications: 'Certifications',
+    achievements: 'Achievements & Honors',
     projects: 'Projects'
   }
 };
@@ -189,6 +202,7 @@ function buildHTML(resumeData, template, keywords, tone) {
     ${buildEducationHTML(resumeData.education, labels.education)}
     ${buildSkillsHTML(resumeData.skills, keywords, labels.skills)}
     ${buildCertsHTML(resumeData.certifications, labels.certifications)}
+    ${buildAchievementsHTML(resumeData.achievements, labels.achievements)}
     ${buildProjectsHTML(resumeData.projects, keywords, labels.projects)}
     ${buildLanguagesHTML(resumeData.languages)}
     ${buildAdditionalHTML(resumeData.additionalSections, keywords)}

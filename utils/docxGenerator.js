@@ -155,6 +155,21 @@ function buildCertificationsSection(certifications, colors, label) {
   return paragraphs;
 }
 
+function buildAchievementsSection(achievements, colors, label) {
+  if (!achievements || achievements.length === 0) return [];
+
+  const paragraphs = [createSectionHeader(label || 'Achievements & Honors', colors)];
+  achievements.forEach(achievement => {
+    paragraphs.push(new Paragraph({
+      spacing: { after: 40 },
+      bullet: { level: 0 },
+      children: [new TextRun({ text: achievement, size: 22, font: 'Calibri' })]
+    }));
+  });
+
+  return paragraphs;
+}
+
 function buildProjectsSection(projects, keywords, colors, label) {
   if (!projects || projects.length === 0) return [];
 
@@ -183,11 +198,11 @@ function buildProjectsSection(projects, keywords, colors, label) {
 
 // Tone-specific section labels
 const toneLabels = {
-  technical: { summary: 'Technical Summary', experience: 'Engineering Experience', education: 'Education', skills: 'Technical Skills & Tools', certifications: 'Certifications & Training', projects: 'Technical Projects' },
-  business: { summary: 'Executive Summary', experience: 'Professional Experience', education: 'Education & Credentials', skills: 'Core Competencies', certifications: 'Certifications & Licenses', projects: 'Key Initiatives' },
-  creative: { summary: 'Profile', experience: 'Creative Experience', education: 'Education', skills: 'Skills & Tools', certifications: 'Awards & Certifications', projects: 'Selected Work' },
-  academic: { summary: 'Research Interests', experience: 'Academic & Research Experience', education: 'Education', skills: 'Research Skills & Methodologies', certifications: 'Grants, Awards & Publications', projects: 'Research Projects' },
-  general: { summary: 'Professional Summary', experience: 'Professional Experience', education: 'Education', skills: 'Skills', certifications: 'Certifications', projects: 'Projects' }
+  technical: { summary: 'Technical Summary', experience: 'Engineering Experience', education: 'Education', skills: 'Technical Skills & Tools', certifications: 'Certifications & Training', achievements: 'Achievements & Honors', projects: 'Technical Projects' },
+  business: { summary: 'Executive Summary', experience: 'Professional Experience', education: 'Education & Credentials', skills: 'Core Competencies', certifications: 'Certifications & Licenses', achievements: 'Achievements & Recognition', projects: 'Key Initiatives' },
+  creative: { summary: 'Profile', experience: 'Creative Experience', education: 'Education', skills: 'Skills & Tools', certifications: 'Awards & Certifications', achievements: 'Achievements & Honors', projects: 'Selected Work' },
+  academic: { summary: 'Research Interests', experience: 'Academic & Research Experience', education: 'Education', skills: 'Research Skills & Methodologies', certifications: 'Grants, Awards & Publications', achievements: 'Honors & Distinctions', projects: 'Research Projects' },
+  general: { summary: 'Professional Summary', experience: 'Professional Experience', education: 'Education', skills: 'Skills', certifications: 'Certifications', achievements: 'Achievements & Honors', projects: 'Projects' }
 };
 
 async function generateDOCX(resumeData, template, keywords, outputPath, tone) {
@@ -265,6 +280,11 @@ async function generateDOCX(resumeData, template, keywords, outputPath, tone) {
   // Certifications
   if (resumeData.certifications && resumeData.certifications.length > 0) {
     sections.push(...buildCertificationsSection(resumeData.certifications, colors, labels.certifications));
+  }
+
+  // Achievements
+  if (resumeData.achievements && resumeData.achievements.length > 0) {
+    sections.push(...buildAchievementsSection(resumeData.achievements, colors, labels.achievements));
   }
 
   // Projects

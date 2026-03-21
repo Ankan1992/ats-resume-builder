@@ -6,6 +6,7 @@ let resumeData = {
   education: [],
   skills: [],
   certifications: [],
+  achievements: [],
   projects: [],
   languages: [],
   additionalSections: []
@@ -96,6 +97,7 @@ document.getElementById('startScratchBtn').addEventListener('click', () => {
     education: [{ degree: '', institution: '', year: '', details: '' }],
     skills: [],
     certifications: [],
+    achievements: [],
     projects: [],
     languages: [],
     additionalSections: []
@@ -141,6 +143,11 @@ function populateForm() {
   const certContainer = document.getElementById('certifications-container');
   certContainer.innerHTML = '';
   (resumeData.certifications || []).forEach(c => addCertification(c));
+
+  // Achievements
+  const achContainer = document.getElementById('achievements-container');
+  achContainer.innerHTML = '';
+  (resumeData.achievements || []).forEach(a => addAchievement(a));
 
   // Projects
   const projContainer = document.getElementById('projects-container');
@@ -217,6 +224,20 @@ function addCertification(text = '') {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px">
       <input type="text" class="input-field cert-text" value="${escapeAttr(text)}" placeholder="AWS Certified Solutions Architect" style="flex:1">
+      <button type="button" class="entry-remove" style="position:static" onclick="this.parentElement.parentElement.remove()">✕</button>
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+function addAchievement(text = '') {
+  const container = document.getElementById('achievements-container');
+  const card = document.createElement('div');
+  card.className = 'entry-card';
+  card.style.padding = '10px 16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <input type="text" class="input-field achievement-text" value="${escapeAttr(text)}" placeholder="Dean's List, Best Paper Award, etc." style="flex:1">
       <button type="button" class="entry-remove" style="position:static" onclick="this.parentElement.parentElement.remove()">✕</button>
     </div>
   `;
@@ -446,6 +467,12 @@ function collectFormData() {
   resumeData.certifications = [];
   document.querySelectorAll('#certifications-container .cert-text').forEach(input => {
     if (input.value.trim()) resumeData.certifications.push(input.value.trim());
+  });
+
+  // Achievements
+  resumeData.achievements = [];
+  document.querySelectorAll('#achievements-container .achievement-text').forEach(input => {
+    if (input.value.trim()) resumeData.achievements.push(input.value.trim());
   });
 
   // Projects
