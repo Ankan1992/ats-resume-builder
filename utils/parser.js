@@ -1,6 +1,7 @@
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const fs = require('fs');
+const learningStore = require('./learningStore');
 
 async function parseResume(filePath, ext) {
   let rawText = '';
@@ -19,6 +20,9 @@ async function parseResume(filePath, ext) {
   console.log('=== RAW TEXT FROM PDF ===');
   console.log(rawText);
   console.log('=== END RAW TEXT ===');
+
+  // Track parse count for learning stats
+  learningStore.recordParsed();
 
   return extractSections(rawText);
 }
@@ -644,13 +648,16 @@ function matchKnownCompany(text) {
   if (!text) return null;
   const lower = text.toLowerCase().trim();
 
-  // Direct full match
+  // Direct full match against built-in + learned
   if (KNOWN_COMPANIES.has(lower)) return text.trim();
+  const learnedCompanies = learningStore.getLearnedCompanies();
+  if (learnedCompanies.has(lower)) return text.trim();
 
   // Try substring matching - find the longest match
   let bestMatch = null;
   let bestLen = 0;
-  for (const company of KNOWN_COMPANIES) {
+  const allCompanies = [...KNOWN_COMPANIES, ...learnedCompanies];
+  for (const company of allCompanies) {
     if (company.length > 3 && lower.includes(company) && company.length > bestLen) {
       bestMatch = company;
       bestLen = company.length;
@@ -670,10 +677,13 @@ function matchKnownInstitution(text) {
   const lower = text.toLowerCase().trim();
 
   if (KNOWN_INSTITUTIONS.has(lower)) return text.trim();
+  const learnedInstitutions = learningStore.getLearnedInstitutions();
+  if (learnedInstitutions.has(lower)) return text.trim();
 
   let bestMatch = null;
   let bestLen = 0;
-  for (const inst of KNOWN_INSTITUTIONS) {
+  const allInstitutions = [...KNOWN_INSTITUTIONS, ...learnedInstitutions];
+  for (const inst of allInstitutions) {
     if (inst.length > 2 && lower.includes(inst) && inst.length > bestLen) {
       bestMatch = inst;
       bestLen = inst.length;
@@ -693,11 +703,14 @@ function matchKnownTitle(text) {
   const lower = text.toLowerCase().trim();
 
   if (KNOWN_TITLES.has(lower)) return text.trim();
+  const learnedTitles = learningStore.getLearnedTitles();
+  if (learnedTitles.has(lower)) return text.trim();
 
   // Try substring matching for multi-word titles (longest match first)
   let bestMatch = null;
   let bestLen = 0;
-  for (const title of KNOWN_TITLES) {
+  const allTitles = [...KNOWN_TITLES, ...learnedTitles];
+  for (const title of allTitles) {
     if (title.length > 4 && lower.includes(title) && title.length > bestLen) {
       bestMatch = title;
       bestLen = title.length;
@@ -787,14 +800,23 @@ function extractSections(text) {
   }
 
   // === Section detection ===
+  // Enhanced: handles ALL CAPS, underlines (---), colons, pipes, brackets, dashes
+  // Strips leading/trailing decorators before matching
+  function cleanSectionLine(line) {
+    return line
+      .replace(/^[-=_*#|►▶▪●•◆☛→\s]+/, '')  // Leading decorators
+      .replace(/[-=_*#|►▶▪●•◆☛→\s:]+$/, '')  // Trailing decorators/colons
+      .trim();
+  }
+
   const sectionHeaders = {
-    summary: /^(summary|profile|objective|about\s*me|professional\s*summary|career\s*summary|executive\s*summary|career\s*objective)[\s:]*$/i,
-    experience: /^(experience|work\s*experience|employment|professional\s*experience|work\s*history|career\s*history|employment\s*history|internship|internships)[\s:]*$/i,
-    education: /^(education|academic|qualifications?|educational\s*(?:background|qualifications?)|academic\s*(?:background|qualifications?))[\s:]*$/i,
-    skills: /^(skills|technical\s*skills|core\s*competencies|competencies|key\s*skills|technologies|tools|areas?\s*of\s*expertise|skill\s*set)[\s:]*$/i,
-    certifications: /^(certifications?(?:\s*(?:&|and)\s*(?:achievements?|awards?|licenses?|training))?|licenses?|credentials|professional\s*certifications?|courses?\s*(?:&|and)\s*certifications?|training\s*(?:&|and)\s*certifications?|achievements?(?:\s*(?:&|and)\s*certifications?)?|awards?\s*(?:&|and)\s*(?:certifications?|achievements?))[\s:]*$/i,
-    projects: /^(projects|personal\s*projects|key\s*projects|notable\s*projects|academic\s*projects|side\s*projects)[\s:]*$/i,
-    languages: /^(languages|language\s*proficiency|language\s*skills)[\s:]*$/i
+    summary: /^(summary|profile|objective|about\s*me|professional\s*summary|career\s*summary|executive\s*summary|career\s*objective|personal\s*statement|professional\s*profile)$/i,
+    experience: /^(experience|work\s*experience|employment|professional\s*experience|work\s*history|career\s*history|employment\s*history|internship|internships|relevant\s*experience|industry\s*experience)$/i,
+    education: /^(education|academic|qualifications?|educational\s*(?:background|qualifications?)|academic\s*(?:background|qualifications?|details?|credentials?)|scholastics?)$/i,
+    skills: /^(skills|technical\s*skills|core\s*competencies|competencies|key\s*skills|technologies|tools|areas?\s*of\s*expertise|skill\s*set|functional\s*skills|professional\s*skills|domain\s*expertise|technical\s*expertise|technical\s*proficiency)$/i,
+    certifications: /^(certifications?(?:\s*(?:&|and)\s*(?:achievements?|awards?|licenses?|training))?|licenses?|credentials|professional\s*certifications?|courses?\s*(?:&|and)\s*certifications?|training\s*(?:&|and)\s*certifications?|achievements?(?:\s*(?:&|and)\s*certifications?)?|awards?\s*(?:&|and)\s*(?:certifications?|achievements?)|honors?\s*(?:&|and)\s*awards?|accomplishments?|distinctions?)$/i,
+    projects: /^(projects|personal\s*projects|key\s*projects|notable\s*projects|academic\s*projects|side\s*projects|research\s*projects|selected\s*projects)$/i,
+    languages: /^(languages|language\s*proficiency|language\s*skills|languages?\s*known)$/i
   };
 
   let currentSection = 'header';
@@ -806,15 +828,35 @@ function extractSections(text) {
     const line = lines[i];
     let sectionFound = false;
 
-    for (const [section, regex] of Object.entries(sectionHeaders)) {
-      if (regex.test(line)) {
-        currentSection = section;
-        sectionFound = true;
-        break;
+    // Clean the line (strip decorators) before matching headers
+    const cleaned = cleanSectionLine(line);
+    if (cleaned.length > 0 && cleaned.length < 60) {
+      for (const [section, regex] of Object.entries(sectionHeaders)) {
+        if (regex.test(cleaned)) {
+          currentSection = section;
+          sectionFound = true;
+          break;
+        }
+      }
+    }
+
+    // Also check for underline-style headers: a short text line followed by "---" or "==="
+    if (!sectionFound && i + 1 < lines.length && /^[-=_]{3,}$/.test(lines[i + 1])) {
+      const headerClean = cleanSectionLine(line);
+      if (headerClean.length > 0 && headerClean.length < 50) {
+        for (const [section, regex] of Object.entries(sectionHeaders)) {
+          if (regex.test(headerClean)) {
+            currentSection = section;
+            sectionFound = true;
+            break;
+          }
+        }
       }
     }
 
     if (!sectionFound) {
+      // Skip underline-only lines (e.g., "----------")
+      if (/^[-=_]{3,}$/.test(line)) continue;
       if (!sectionLines[currentSection]) sectionLines[currentSection] = [];
       sectionLines[currentSection].push(line);
     }

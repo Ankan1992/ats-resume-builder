@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const { parseResume } = require('./utils/parser');
 const { generatePDF } = require('./utils/pdfGenerator');
 const { generateDOCX } = require('./utils/docxGenerator');
+const learningStore = require('./utils/learningStore');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -126,6 +127,51 @@ app.get('/api/download/:filename', (req, res) => {
   res.setHeader('Content-Type', contentType);
   res.setHeader('Content-Disposition', `attachment; filename="ATS_Resume${ext}"`);
   res.sendFile(filePath);
+});
+
+// ===== Self-Improving Parser: Feedback & Learning Endpoints =====
+
+// Submit user corrections (diff between parsed and edited data)
+app.post('/api/feedback/corrections', (req, res) => {
+  try {
+    const { originalData, correctedData } = req.body;
+    if (!originalData || !correctedData) {
+      return res.status(400).json({ error: 'Both originalData and correctedData are required' });
+    }
+    const learned = learningStore.processCorrections(originalData, correctedData);
+    console.log('=== Learning from user corrections ===');
+    console.log(JSON.stringify(learned, null, 2));
+    res.json({ success: true, learned });
+  } catch (err) {
+    console.error('Feedback corrections error:', err);
+    res.status(500).json({ error: 'Failed to process corrections' });
+  }
+});
+
+// Submit chat/feedback message
+app.post('/api/feedback/message', (req, res) => {
+  try {
+    const { message, category, context } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    learningStore.addFeedback(message, category || 'general', context || {});
+    res.json({ success: true, message: 'Feedback recorded. Thank you!' });
+  } catch (err) {
+    console.error('Feedback message error:', err);
+    res.status(500).json({ error: 'Failed to record feedback' });
+  }
+});
+
+// Get learning stats
+app.get('/api/feedback/stats', (req, res) => {
+  try {
+    const stats = learningStore.getStats();
+    res.json({ success: true, stats });
+  } catch (err) {
+    console.error('Feedback stats error:', err);
+    res.status(500).json({ error: 'Failed to get stats' });
+  }
 });
 
 // Cleanup old files periodically (every hour) — only on non-serverless

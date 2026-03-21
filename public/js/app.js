@@ -14,6 +14,7 @@ let resumeData = {
 let selectedTemplate = 'classic';
 let keywords = [];
 let currentStep = 1;
+let originalParsedData = null; // Track original parsed data for learning
 
 // ===== Step Navigation =====
 function goToStep(step) {
@@ -74,6 +75,8 @@ async function handleFileUpload(file) {
 
     if (result.success) {
       resumeData = { ...resumeData, ...result.data };
+      // Store a deep copy of original parsed data for learning
+      originalParsedData = JSON.parse(JSON.stringify(resumeData));
       populateForm();
       showToast('Resume parsed successfully!', 'success');
       goToStep(2);
@@ -579,6 +582,11 @@ async function generateResume() {
     return;
   }
 
+  // Auto-submit corrections to the learning system (non-blocking)
+  if (originalParsedData) {
+    submitCorrections(originalParsedData, resumeData);
+  }
+
   const btnText = document.querySelector('.btn-text');
   const btnLoading = document.querySelector('.btn-loading');
   btnText.style.display = 'none';
@@ -669,3 +677,167 @@ document.querySelectorAll('.step').forEach(step => {
     }
   });
 });
+
+// ===== Self-Improving Parser: Corrections & Feedback =====
+
+/**
+ * Submit corrections to the learning system.
+ * Compares original parsed data with user-edited data and sends diffs.
+ */
+async function submitCorrections(original, corrected) {
+  try {
+    await fetch('/api/feedback/corrections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ originalData: original, correctedData: corrected })
+    });
+    console.log('[Learning] Corrections submitted successfully');
+  } catch (err) {
+    console.log('[Learning] Failed to submit corrections:', err.message);
+  }
+}
+
+/**
+ * Submit a feedback message from the chat widget
+ */
+async function submitFeedback(message, category = 'general') {
+  if (!message || !message.trim()) return;
+  try {
+    const res = await fetch('/api/feedback/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        category,
+        context: {
+          currentStep,
+          hasResume: !!resumeData.name,
+          experienceCount: (resumeData.experience || []).length,
+          educationCount: (resumeData.education || []).length
+        }
+      })
+    });
+    const result = await res.json();
+    return result;
+  } catch (err) {
+    console.error('[Feedback] Failed to submit:', err.message);
+    return { success: false };
+  }
+}
+
+// ===== Chat / Feedback Widget =====
+function initFeedbackWidget() {
+  // Create the floating chat button and panel
+  const widget = document.createElement('div');
+  widget.id = 'feedback-widget';
+  widget.innerHTML = `
+    <button class="feedback-fab" id="feedbackFab" title="Help us improve!">
+      <span class="fab-icon">💬</span>
+      <span class="fab-pulse"></span>
+    </button>
+    <div class="feedback-panel" id="feedbackPanel">
+      <div class="feedback-header">
+        <h4>Help Improve the Parser</h4>
+        <button class="feedback-close" id="feedbackClose">&times;</button>
+      </div>
+      <div class="feedback-body">
+        <div class="feedback-messages" id="feedbackMessages">
+          <div class="feedback-msg bot">
+            <span class="msg-avatar">🤖</span>
+            <div class="msg-content">
+              <p>Hi! I'm always learning. You can:</p>
+              <ul>
+                <li>Report parsing issues</li>
+                <li>Suggest new company/institution names</li>
+                <li>Tell me about new resume formats</li>
+              </ul>
+              <p>Your edits in Step 2 also help me learn automatically!</p>
+            </div>
+          </div>
+        </div>
+        <div class="feedback-quick-actions">
+          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my company name correctly">Company not recognized</button>
+          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my job title correctly">Title not recognized</button>
+          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my institution name correctly">Institution not recognized</button>
+          <button class="quick-action-btn" data-cat="format" data-msg="My resume format was not parsed correctly">Format issue</button>
+        </div>
+        <div class="feedback-input-area">
+          <input type="text" id="feedbackInput" class="feedback-input" placeholder="Describe the issue or suggestion...">
+          <select id="feedbackCategory" class="feedback-select">
+            <option value="general">General</option>
+            <option value="parsing">Parsing Issue</option>
+            <option value="format">Format Issue</option>
+            <option value="feature">Feature Request</option>
+            <option value="bug">Bug Report</option>
+          </select>
+          <button class="feedback-send" id="feedbackSend">Send</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(widget);
+
+  // Toggle panel
+  const fab = document.getElementById('feedbackFab');
+  const panel = document.getElementById('feedbackPanel');
+  const closeBtn = document.getElementById('feedbackClose');
+
+  fab.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    fab.classList.toggle('active');
+  });
+  closeBtn.addEventListener('click', () => {
+    panel.classList.remove('open');
+    fab.classList.remove('active');
+  });
+
+  // Send feedback
+  const sendBtn = document.getElementById('feedbackSend');
+  const input = document.getElementById('feedbackInput');
+  const catSelect = document.getElementById('feedbackCategory');
+  const messagesEl = document.getElementById('feedbackMessages');
+
+  async function sendFeedbackMessage(message, category) {
+    if (!message || !message.trim()) return;
+
+    // Add user message to chat
+    const userMsg = document.createElement('div');
+    userMsg.className = 'feedback-msg user';
+    userMsg.innerHTML = `<div class="msg-content"><p>${escapeHTML(message)}</p><span class="msg-cat">${category}</span></div>`;
+    messagesEl.appendChild(userMsg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // Submit to server
+    const result = await submitFeedback(message, category);
+
+    // Add bot response
+    const botMsg = document.createElement('div');
+    botMsg.className = 'feedback-msg bot';
+    botMsg.innerHTML = `<span class="msg-avatar">🤖</span><div class="msg-content"><p>${result.success ? 'Thank you! Your feedback has been recorded and will help improve the parser.' : 'Sorry, there was an issue recording your feedback. Please try again.'}</p></div>`;
+    messagesEl.appendChild(botMsg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    input.value = '';
+  }
+
+  sendBtn.addEventListener('click', () => {
+    sendFeedbackMessage(input.value, catSelect.value);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendFeedbackMessage(input.value, catSelect.value);
+    }
+  });
+
+  // Quick action buttons
+  document.querySelectorAll('.quick-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sendFeedbackMessage(btn.dataset.msg, btn.dataset.cat);
+    });
+  });
+}
+
+// Initialize the feedback widget
+initFeedbackWidget();
