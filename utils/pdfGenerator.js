@@ -1,20 +1,35 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const { buildHTML } = require('../templates/htmlTemplates');
 
 async function generatePDF(resumeData, template, keywords, outputPath, tone) {
   const html = buildHTML(resumeData, template, keywords, tone);
 
-  const launchOptions = {
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
-  };
+  let browser;
 
-  // Use system Chromium if set (Docker/Render deployment)
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    // Serverless environment (Vercel / Lambda)
+    const chromium = require('@sparticuz/chromium');
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
+    });
+  } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    // Docker / system Chromium
+    browser = await puppeteer.launch({
+      headless: 'new',
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+    });
+  } else {
+    // Local development — use full puppeteer
+    const puppeteerFull = require('puppeteer');
+    browser = await puppeteerFull.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+    });
   }
-
-  const browser = await puppeteer.launch(launchOptions);
 
   try {
     const page = await browser.newPage();
