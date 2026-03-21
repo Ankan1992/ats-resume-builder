@@ -510,6 +510,32 @@ h2 {
 .keyword-suggestion:hover { background: #fef9c3; border-color: #fbbf24; color: #92400e; }
 .keyword-suggestion.added { background: #fef9c3; border-color: #fbbf24; color: #92400e; opacity: 0.5; pointer-events: none; }
 
+.keyword-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.keyword-cat-tab {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid var(--gray-200);
+}
+.keyword-cat-tab:hover { border-color: var(--primary); color: var(--primary); }
+.keyword-cat-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.keyword-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* Format */
 .format-section {
   background: white;

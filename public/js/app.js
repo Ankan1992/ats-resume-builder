@@ -307,34 +307,88 @@ setupTagInput('skill-input', 'skills-tags', 'skill');
 setupTagInput('language-input', 'languages-tags', 'language');
 setupTagInput('keyword-input', 'keywords-tags', 'keyword');
 
-// ===== Tone-based Keyword Suggestions =====
+// ===== Tone-based Keyword Suggestions (with sub-categories) =====
 const toneSuggestions = {
-  technical: ['Python', 'JavaScript', 'AWS', 'Docker', 'Kubernetes', 'CI/CD', 'REST API', 'Microservices', 'Machine Learning', 'System Design', 'Agile', 'Scrum', 'SQL', 'NoSQL', 'DevOps', 'Cloud Computing', 'Data Pipeline', 'Performance Optimization', 'Scalability', 'Git'],
-  business: ['Revenue Growth', 'P&L Management', 'Strategic Planning', 'Stakeholder Management', 'Market Analysis', 'ROI', 'Cross-functional', 'Leadership', 'Budget Management', 'KPI', 'Business Development', 'Client Relations', 'Process Improvement', 'Change Management', 'Negotiation', 'Risk Management', 'Forecasting', 'Go-to-Market', 'OKR', 'Due Diligence'],
-  creative: ['Brand Strategy', 'Content Marketing', 'UX/UI Design', 'Campaign Management', 'Storytelling', 'Social Media', 'Adobe Creative Suite', 'A/B Testing', 'SEO', 'Conversion Rate', 'User Research', 'Wireframing', 'Figma', 'Typography', 'Art Direction', 'Copywriting', 'Analytics', 'Engagement', 'Visual Identity', 'Design Systems'],
-  academic: ['Research', 'Publications', 'Peer-reviewed', 'Methodology', 'Data Analysis', 'Grant Writing', 'Curriculum Development', 'Teaching', 'Thesis', 'Literature Review', 'Quantitative', 'Qualitative', 'Statistical Analysis', 'Lab Management', 'Conference Presentations', 'Citation', 'Hypothesis Testing', 'IRB Approval', 'SPSS', 'R Programming'],
-  general: ['Problem Solving', 'Communication', 'Teamwork', 'Time Management', 'Analytical', 'Detail-oriented', 'Self-motivated', 'Adaptable', 'Project Management', 'Results-driven', 'Collaboration', 'Organization', 'Critical Thinking', 'Decision Making', 'Initiative']
+  technical: {
+    'Engineering': ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'Go', 'Rust', 'React', 'Node.js', 'Angular', 'Vue.js', 'Django', 'Spring Boot', 'REST API', 'GraphQL', 'Microservices', 'System Design', 'Full Stack', 'Backend', 'Frontend'],
+    'Cloud & DevOps': ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Terraform', 'Jenkins', 'GitHub Actions', 'DevOps', 'Cloud Computing', 'Serverless', 'Infrastructure as Code', 'SRE', 'Linux'],
+    'Data & AI': ['Machine Learning', 'Deep Learning', 'Data Pipeline', 'SQL', 'NoSQL', 'MongoDB', 'PostgreSQL', 'Data Engineering', 'ETL', 'TensorFlow', 'PyTorch', 'NLP', 'Computer Vision', 'LLM', 'Big Data', 'Apache Spark', 'Data Visualization'],
+    'Practices': ['Agile', 'Scrum', 'Kanban', 'TDD', 'Code Review', 'Performance Optimization', 'Scalability', 'Git', 'Architecture', 'Design Patterns', 'Technical Documentation', 'Mentoring']
+  },
+  business: {
+    'Strategy & Leadership': ['Strategic Planning', 'Leadership', 'Executive Leadership', 'Vision & Strategy', 'Change Management', 'Organizational Development', 'Board Presentations', 'C-Suite Engagement', 'Thought Leadership', 'Transformation'],
+    'Product & Program': ['Product Management', 'Product Strategy', 'Program Management', 'Product Roadmap', 'Product Lifecycle', 'Backlog Prioritization', 'User Stories', 'Go-to-Market', 'MVP', 'Feature Specification', 'Sprint Planning', 'Requirements Gathering', 'Stakeholder Management'],
+    'Finance & Operations': ['P&L Management', 'Revenue Growth', 'Budget Management', 'Cost Optimization', 'Financial Modeling', 'ROI', 'EBITDA', 'Due Diligence', 'M&A', 'Forecasting', 'Operational Excellence', 'Vendor Management', 'Supply Chain'],
+    'Growth & Analytics': ['Business Development', 'Market Analysis', 'Competitive Analysis', 'KPI', 'OKR', 'Data-driven Decision Making', 'Client Relations', 'Account Management', 'Partnership Development', 'Revenue Operations', 'GTM Strategy', 'Customer Success'],
+    'People & Process': ['Cross-functional Teams', 'Team Building', 'Hiring & Talent', 'Performance Management', 'Process Improvement', 'Six Sigma', 'Lean', 'Negotiation', 'Risk Management', 'Compliance', 'Governance', 'Conflict Resolution']
+  },
+  creative: {
+    'Design': ['UX/UI Design', 'User Research', 'Wireframing', 'Prototyping', 'Figma', 'Sketch', 'Adobe Creative Suite', 'Design Systems', 'Typography', 'Art Direction', 'Visual Identity', 'Motion Design', 'Responsive Design'],
+    'Marketing & Content': ['Brand Strategy', 'Content Marketing', 'Content Strategy', 'Copywriting', 'Storytelling', 'Social Media', 'Campaign Management', 'Email Marketing', 'Influencer Marketing', 'PR', 'Editorial', 'Video Production'],
+    'Growth & Data': ['SEO', 'SEM', 'A/B Testing', 'Conversion Rate Optimization', 'Analytics', 'Google Analytics', 'Engagement', 'Audience Growth', 'Marketing Automation', 'Funnel Optimization', 'Attribution']
+  },
+  academic: {
+    'Research': ['Research', 'Publications', 'Peer-reviewed', 'Methodology', 'Data Analysis', 'Grant Writing', 'Literature Review', 'Hypothesis Testing', 'IRB Approval', 'Research Design'],
+    'Teaching & Leadership': ['Curriculum Development', 'Teaching', 'Mentoring', 'Academic Leadership', 'Course Design', 'Student Advising', 'Conference Presentations', 'Keynote Speaker'],
+    'Tools & Methods': ['Quantitative', 'Qualitative', 'Mixed Methods', 'Statistical Analysis', 'SPSS', 'R Programming', 'Stata', 'Lab Management', 'Clinical Trials', 'Systematic Review']
+  },
+  general: {
+    'Core Skills': ['Problem Solving', 'Communication', 'Teamwork', 'Time Management', 'Analytical', 'Detail-oriented', 'Self-motivated', 'Adaptable', 'Project Management', 'Results-driven', 'Collaboration', 'Organization', 'Critical Thinking', 'Decision Making', 'Initiative', 'Multitasking', 'Presentation Skills']
+  }
 };
+
+let activeKeywordCategory = null;
 
 function updateKeywordSuggestions() {
   const tone = document.querySelector('input[name="tone"]:checked')?.value || 'general';
   const container = document.getElementById('keywordSuggestions');
-  const suggestions = toneSuggestions[tone] || toneSuggestions.general;
+  const categories = toneSuggestions[tone] || toneSuggestions.general;
+  const catNames = Object.keys(categories);
 
-  container.innerHTML = '<span style="font-size:12px;color:#6b7280;margin-right:4px">Suggested:</span>';
-  suggestions.forEach(kw => {
+  // If no active category or it doesn't exist in current tone, default to first
+  if (!activeKeywordCategory || !categories[activeKeywordCategory]) {
+    activeKeywordCategory = catNames[0];
+  }
+
+  let html = '';
+
+  // Category tabs
+  html += '<div class="keyword-categories">';
+  catNames.forEach(cat => {
+    const isActive = cat === activeKeywordCategory;
+    html += `<span class="keyword-cat-tab${isActive ? ' active' : ''}" data-cat="${cat}">${cat}</span>`;
+  });
+  html += '</div>';
+
+  // Keywords for active category
+  html += '<div class="keyword-pills">';
+  const kws = categories[activeKeywordCategory] || [];
+  kws.forEach(kw => {
     const isAdded = keywords.includes(kw);
-    const pill = document.createElement('span');
-    pill.className = `keyword-suggestion${isAdded ? ' added' : ''}`;
-    pill.textContent = kw;
+    html += `<span class="keyword-suggestion${isAdded ? ' added' : ''}" data-kw="${escapeAttr(kw)}">${escapeHTML(kw)}</span>`;
+  });
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  // Bind click events for category tabs
+  container.querySelectorAll('.keyword-cat-tab').forEach(tab => {
+    tab.onclick = () => {
+      activeKeywordCategory = tab.dataset.cat;
+      updateKeywordSuggestions();
+    };
+  });
+
+  // Bind click events for keyword pills
+  container.querySelectorAll('.keyword-suggestion:not(.added)').forEach(pill => {
     pill.onclick = () => {
+      const kw = pill.dataset.kw;
       if (!keywords.includes(kw)) {
         keywords.push(kw);
         renderTags('keywords-tags', keywords, 'keyword');
         updateKeywordSuggestions();
       }
     };
-    container.appendChild(pill);
   });
 }
 
