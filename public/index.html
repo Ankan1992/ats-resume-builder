@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATS Resume Builder</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- Navigation / Progress -->
+    <header class="top-bar">
+      <div class="logo">
+        <span class="logo-icon">📄</span>
+        <span class="logo-text">ATS Resume Builder</span>
+      </div>
+      <div class="steps-indicator">
+        <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Upload</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Edit</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Design</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Download</span></div>
+      </div>
+    </header>
+
+    <!-- Step 1: Upload -->
+    <section class="step-panel active" id="step1">
+      <div class="panel-content">
+        <h1>Build Your ATS-Friendly Resume</h1>
+        <p class="subtitle">Upload an existing resume or start from scratch. Our builder creates resumes optimized for Applicant Tracking Systems.</p>
+
+        <div class="upload-options">
+          <div class="upload-card" id="uploadCard">
+            <div class="upload-dropzone" id="dropzone">
+              <div class="dropzone-icon">📤</div>
+              <h3>Upload Existing Resume</h3>
+              <p>Drag & drop your PDF or DOCX file here</p>
+              <span class="or-divider">or</span>
+              <button class="btn btn-primary" id="browseBtn">Browse Files</button>
+              <input type="file" id="fileInput" accept=".pdf,.doc,.docx" hidden>
+              <p class="file-types">Supported: PDF, DOC, DOCX (Max 10MB)</p>
+            </div>
+            <div class="upload-progress" id="uploadProgress" style="display:none">
+              <div class="spinner"></div>
+              <p>Parsing your resume...</p>
+            </div>
+          </div>
+
+          <div class="divider-vertical">
+            <span>OR</span>
+          </div>
+
+          <div class="upload-card">
+            <div class="scratch-option">
+              <div class="scratch-icon">✍️</div>
+              <h3>Start From Scratch</h3>
+              <p>Create a new resume by filling in your details manually</p>
+              <button class="btn btn-secondary" id="startScratchBtn">Start Fresh</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="linkedin-section">
+          <div class="linkedin-card">
+            <span class="linkedin-icon">🔗</span>
+            <div>
+              <h4>Import from LinkedIn</h4>
+              <p>Paste your LinkedIn profile URL and manually enter details to match</p>
+            </div>
+            <input type="url" id="linkedinUrl" placeholder="https://linkedin.com/in/your-profile" class="input-field">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Edit Resume Data -->
+    <section class="step-panel" id="step2">
+      <div class="panel-content edit-panel">
+        <div class="edit-header">
+          <h2>Edit Your Resume</h2>
+          <p class="subtitle">Review and edit the parsed content. Click any field to modify it.</p>
+        </div>
+
+        <form id="resumeForm" class="resume-form">
+          <!-- Personal Info -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">👤</span> Personal Information
+            </h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="field-name" class="input-field" placeholder="John Doe">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="field-email" class="input-field" placeholder="john@example.com">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="field-phone" class="input-field" placeholder="+91 98765 43210">
+              </div>
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="field-location" class="input-field" placeholder="Mumbai, India">
+              </div>
+              <div class="form-group">
+                <label>LinkedIn</label>
+                <input type="text" id="field-linkedin" class="input-field" placeholder="linkedin.com/in/johndoe">
+              </div>
+              <div class="form-group">
+                <label>Website / Portfolio</label>
+                <input type="text" id="field-website" class="input-field" placeholder="johndoe.com">
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">📝</span> Professional Summary
+            </h3>
+            <textarea id="field-summary" class="input-field textarea" rows="4" placeholder="Experienced software engineer with 5+ years in building scalable web applications..."></textarea>
+          </div>
+
+          <!-- Experience -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">💼</span> Work Experience
+              <button type="button" class="btn-add" onclick="addExperience()">+ Add</button>
+            </h3>
+            <div id="experience-container"></div>
+          </div>
+
+          <!-- Education -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">🎓</span> Education
+              <button type="button" class="btn-add" onclick="addEducation()">+ Add</button>
+            </h3>
+            <div id="education-container"></div>
+          </div>
+
+          <!-- Skills -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">🛠️</span> Skills
+            </h3>
+            <div class="skills-input-wrapper">
+              <div id="skills-tags" class="tags-container"></div>
+              <input type="text" id="skill-input" class="input-field" placeholder="Type a skill and press Enter">
+            </div>
+          </div>
+
+          <!-- Certifications -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">🏆</span> Certifications
+              <button type="button" class="btn-add" onclick="addCertification()">+ Add</button>
+            </h3>
+            <div id="certifications-container"></div>
+          </div>
+
+          <!-- Projects -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">🚀</span> Projects
+              <button type="button" class="btn-add" onclick="addProject()">+ Add</button>
+            </h3>
+            <div id="projects-container"></div>
+          </div>
+
+          <!-- Languages -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="section-icon">🌐</span> Languages
+            </h3>
+            <div class="skills-input-wrapper">
+              <div id="languages-tags" class="tags-container"></div>
+              <input type="text" id="language-input" class="input-field" placeholder="Type a language and press Enter">
+            </div>
+          </div>
+        </form>
+
+        <div class="edit-actions">
+          <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goToStep(3)">Choose Design →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: Choose Template & Keywords -->
+    <section class="step-panel" id="step3">
+      <div class="panel-content">
+        <h2>Choose Your Design</h2>
+        <p class="subtitle">Pick a template and add keywords to highlight in your resume.</p>
+
+        <!-- Tone & Focus -->
+        <div class="tone-section">
+          <h3><span class="section-icon">🎯</span> Resume Tone & Focus</h3>
+          <p class="hint">Select your background to optimize language, power words, and section emphasis.</p>
+          <div class="tone-options">
+            <label class="tone-option">
+              <input type="radio" name="tone" value="technical" checked>
+              <div class="tone-card">
+                <span class="tone-icon">💻</span>
+                <span class="tone-name">Technical</span>
+                <span class="tone-desc">Engineering, IT, Data Science, DevOps. Emphasizes tech stack, system design, metrics.</span>
+              </div>
+            </label>
+            <label class="tone-option">
+              <input type="radio" name="tone" value="business">
+              <div class="tone-card">
+                <span class="tone-icon">📊</span>
+                <span class="tone-name">Business</span>
+                <span class="tone-desc">Management, Finance, Consulting, Strategy. Emphasizes leadership, revenue, growth.</span>
+              </div>
+            </label>
+            <label class="tone-option">
+              <input type="radio" name="tone" value="creative">
+              <div class="tone-card">
+                <span class="tone-icon">🎨</span>
+                <span class="tone-name">Creative</span>
+                <span class="tone-desc">Design, Marketing, Content, Media. Emphasizes campaigns, branding, storytelling.</span>
+              </div>
+            </label>
+            <label class="tone-option">
+              <input type="radio" name="tone" value="academic">
+              <div class="tone-card">
+                <span class="tone-icon">🎓</span>
+                <span class="tone-name">Academic</span>
+                <span class="tone-desc">Research, Teaching, Publications. Emphasizes research, citations, methodology.</span>
+              </div>
+            </label>
+            <label class="tone-option">
+              <input type="radio" name="tone" value="general">
+              <div class="tone-card">
+                <span class="tone-icon">📋</span>
+                <span class="tone-name">General</span>
+                <span class="tone-desc">Balanced for any field. Clean, professional, universally suitable.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Keywords -->
+        <div class="keywords-section">
+          <h3><span class="section-icon">🔑</span> Keywords to Highlight</h3>
+          <p class="hint">Add important job-specific keywords. These will appear <strong>bold</strong> in your resume for ATS optimization.</p>
+          <div class="keyword-suggestions" id="keywordSuggestions"></div>
+          <div class="skills-input-wrapper">
+            <div id="keywords-tags" class="tags-container"></div>
+            <input type="text" id="keyword-input" class="input-field" placeholder="Type a keyword and press Enter (e.g., Python, Machine Learning, Agile)">
+          </div>
+        </div>
+
+        <!-- Templates -->
+        <div class="templates-grid">
+          <div class="template-card selected" data-template="classic" onclick="selectTemplate('classic')">
+            <div class="template-preview classic-preview">
+              <div class="tp-header"></div>
+              <div class="tp-line w80"></div>
+              <div class="tp-line w60"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w90"></div>
+              <div class="tp-line w70"></div>
+              <div class="tp-line w85"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w75"></div>
+              <div class="tp-line w65"></div>
+            </div>
+            <div class="template-info">
+              <h4>Classic</h4>
+              <p>Traditional serif design. Timeless and professional.</p>
+            </div>
+            <div class="template-check">✓</div>
+          </div>
+
+          <div class="template-card" data-template="modern" onclick="selectTemplate('modern')">
+            <div class="template-preview modern-preview">
+              <div class="tp-header"></div>
+              <div class="tp-line w80"></div>
+              <div class="tp-line w60"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w90"></div>
+              <div class="tp-line w70"></div>
+              <div class="tp-line w85"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w75"></div>
+              <div class="tp-line w65"></div>
+            </div>
+            <div class="template-info">
+              <h4>Modern</h4>
+              <p>Clean blue accents. Contemporary and sleek.</p>
+            </div>
+            <div class="template-check">✓</div>
+          </div>
+
+          <div class="template-card" data-template="elegant" onclick="selectTemplate('elegant')">
+            <div class="template-preview elegant-preview">
+              <div class="tp-header"></div>
+              <div class="tp-line w80"></div>
+              <div class="tp-line w60"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w90"></div>
+              <div class="tp-line w70"></div>
+              <div class="tp-line w85"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w75"></div>
+              <div class="tp-line w65"></div>
+            </div>
+            <div class="template-info">
+              <h4>Elegant</h4>
+              <p>Purple sophistication. Distinctive and refined.</p>
+            </div>
+            <div class="template-check">✓</div>
+          </div>
+
+          <div class="template-card" data-template="bold" onclick="selectTemplate('bold')">
+            <div class="template-preview bold-preview">
+              <div class="tp-header"></div>
+              <div class="tp-line w80"></div>
+              <div class="tp-line w60"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w90"></div>
+              <div class="tp-line w70"></div>
+              <div class="tp-line w85"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w75"></div>
+              <div class="tp-line w65"></div>
+            </div>
+            <div class="template-info">
+              <h4>Bold</h4>
+              <p>Red accent power. Strong and impactful.</p>
+            </div>
+            <div class="template-check">✓</div>
+          </div>
+
+          <div class="template-card" data-template="minimal" onclick="selectTemplate('minimal')">
+            <div class="template-preview minimal-preview">
+              <div class="tp-header"></div>
+              <div class="tp-line w80"></div>
+              <div class="tp-line w60"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w90"></div>
+              <div class="tp-line w70"></div>
+              <div class="tp-line w85"></div>
+              <div class="tp-section"></div>
+              <div class="tp-line w75"></div>
+              <div class="tp-line w65"></div>
+            </div>
+            <div class="template-info">
+              <h4>Minimal</h4>
+              <p>Ultra-clean whitespace. Let content shine.</p>
+            </div>
+            <div class="template-check">✓</div>
+          </div>
+        </div>
+
+        <!-- Format Selection -->
+        <div class="format-section">
+          <h3><span class="section-icon">📁</span> Output Format</h3>
+          <div class="format-options">
+            <label class="format-option">
+              <input type="radio" name="format" value="pdf" checked>
+              <div class="format-card">
+                <span class="format-icon">📕</span>
+                <span class="format-name">PDF Only</span>
+              </div>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="docx">
+              <div class="format-card">
+                <span class="format-icon">📘</span>
+                <span class="format-name">Word Only</span>
+              </div>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="both">
+              <div class="format-card">
+                <span class="format-icon">📦</span>
+                <span class="format-name">Both PDF & Word</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn btn-ghost" onclick="goToStep(2)">← Back to Edit</button>
+          <button class="btn btn-primary btn-generate" onclick="generateResume()">
+            <span class="btn-text">Generate Resume</span>
+            <span class="btn-loading" style="display:none"><span class="spinner-small"></span> Generating...</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 4: Download -->
+    <section class="step-panel" id="step4">
+      <div class="panel-content download-panel">
+        <div class="success-icon">🎉</div>
+        <h2>Your Resume is Ready!</h2>
+        <p class="subtitle">Download your ATS-optimized resume below.</p>
+
+        <div class="download-cards" id="downloadCards">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn btn-ghost" onclick="goToStep(3)">← Change Design</button>
+          <button class="btn btn-secondary" onclick="goToStep(2)">✏️ Edit & Regenerate</button>
+          <button class="btn btn-primary" onclick="goToStep(1)">🔄 Start New Resume</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
