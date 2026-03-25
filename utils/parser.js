@@ -743,9 +743,98 @@ function isInstitutionLike(text) {
 }
 
 
+// ===== Text Normalization =====
+
+/**
+ * Detect if a line is "spaced out" like "P R O F E S S I O N A L"
+ * Pattern: single chars separated by spaces, possibly with multi-space word gaps
+ */
+function isSpacedOut(line) {
+  // Match: single letter, space, single letter, space... (at least 4 letters)
+  // Allow multi-space gaps between "words" (e.g., "A N K A N   S E N G U P T A")
+  const stripped = line.replace(/\s+/g, '');
+  if (stripped.length < 3) return false;
+  // Count single-char tokens separated by single spaces
+  const tokens = line.split(/\s+/);
+  const singleCharTokens = tokens.filter(t => t.length === 1 && /[A-Za-z]/.test(t));
+  // If most tokens are single chars, it's spaced out
+  return singleCharTokens.length >= 3 && singleCharTokens.length >= tokens.length * 0.6;
+}
+
+/**
+ * Collapse spaced-out text: "P R O F E S S I O N A L   E X P E R I E N C E" → "PROFESSIONAL EXPERIENCE"
+ */
+function collapseSpacedText(line) {
+  // Split into "word groups" separated by 2+ spaces (word boundaries in spaced text)
+  const groups = line.split(/\s{2,}/);
+  return groups.map(g => {
+    // Check if this group is spaced-out letters
+    const tokens = g.split(/\s+/);
+    if (tokens.length >= 2 && tokens.every(t => t.length === 1)) {
+      return tokens.join('');
+    }
+    return g;
+  }).join(' ');
+}
+
+/**
+ * Normalize raw text from PDF/DOCX extraction.
+ * Fixes:
+ * 1. Spaced-out headers and names
+ * 2. Concatenated company+date (e.g., "JUSPAY TechnologiesJan 2022 – Present")
+ * 3. Bullet points concatenated without proper line breaks
+ */
+function normalizeText(text) {
+  let lines = text.split('\n');
+  const normalized = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (line.length === 0) {
+      normalized.push('');
+      continue;
+    }
+
+    // 1. Collapse spaced-out text
+    if (isSpacedOut(line)) {
+      line = collapseSpacedText(line);
+    }
+
+    // 2. Split concatenated company+date lines
+    // Pattern: "JUSPAY TechnologiesJan 2022 – Present" or "ZestMoneyApr 2019 – Dec 2021"
+    // Also: "Yes Bank Ltd.May 2018 – Apr 2019"
+    const concatMatch = line.match(/^(.+?)([A-Z][a-z]{2}\s+\d{4}\s*[–—\-]\s*(?:[A-Z][a-z]{2}\s+\d{4}|Present|Current|Till\s*Date|Ongoing).*)$/);
+    if (concatMatch) {
+      const before = concatMatch[1].trim();
+      const datepart = concatMatch[2].trim();
+      // Only split if the "before" part ends with a word character (no separator before date)
+      if (before.length > 2 && /[a-zA-Z).]$/.test(before)) {
+        line = before + '\t' + datepart;
+      }
+    }
+
+    // 3. Split concatenated text+percentage/year (education lines)
+    // Pattern: "Jadavpur University8/10 CGPA2015" or "FMS, University of Delhi72.81%2017"
+    // Split percentage stuck to text
+    line = line.replace(/([a-zA-Z)])(\d+(?:\.\d+)?%)/g, '$1\t$2');
+    // Split "CGPA2015" -> "CGPA\t2015" (year stuck to end of text)
+    line = line.replace(/(CGPA|GPA|CPI|SGPA|%)\s*(\d{4})\b/gi, '$1\t$2');
+    // Split institution name stuck to fraction: "University8/10" -> "University\t8/10"
+    line = line.replace(/([a-zA-Z)])(\d+\/\d+\s*(?:CGPA|GPA|CPI|SGPA)?)/gi, '$1\t$2');
+
+    normalized.push(line);
+  }
+
+  return normalized.join('\n');
+}
+
+
 // ===== Main Section Extractor =====
 
 function extractSections(text) {
+  // Normalize text before processing
+  text = normalizeText(text);
+
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
   const resume = {

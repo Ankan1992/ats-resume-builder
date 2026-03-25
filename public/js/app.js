@@ -731,14 +731,14 @@ function initFeedbackWidget() {
   const widget = document.createElement('div');
   widget.id = 'feedback-widget';
   widget.innerHTML = `
-    <button class="feedback-fab" id="feedbackFab" title="Help us improve!">
+    <button type="button" class="feedback-fab" id="feedbackFab" title="Help us improve!">
       <span class="fab-icon">💬</span>
       <span class="fab-pulse"></span>
     </button>
     <div class="feedback-panel" id="feedbackPanel">
       <div class="feedback-header">
         <h4>Help Improve the Parser</h4>
-        <button class="feedback-close" id="feedbackClose">&times;</button>
+        <button type="button" class="feedback-close" id="feedbackClose">&times;</button>
       </div>
       <div class="feedback-body">
         <div class="feedback-messages" id="feedbackMessages">
@@ -756,10 +756,10 @@ function initFeedbackWidget() {
           </div>
         </div>
         <div class="feedback-quick-actions">
-          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my company name correctly">Company not recognized</button>
-          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my job title correctly">Title not recognized</button>
-          <button class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my institution name correctly">Institution not recognized</button>
-          <button class="quick-action-btn" data-cat="format" data-msg="My resume format was not parsed correctly">Format issue</button>
+          <button type="button" class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my company name correctly">Company not recognized</button>
+          <button type="button" class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my job title correctly">Title not recognized</button>
+          <button type="button" class="quick-action-btn" data-cat="parsing" data-msg="The parser didn't recognize my institution name correctly">Institution not recognized</button>
+          <button type="button" class="quick-action-btn" data-cat="format" data-msg="My resume format was not parsed correctly">Format issue</button>
         </div>
         <div class="feedback-input-area">
           <input type="text" id="feedbackInput" class="feedback-input" placeholder="Describe the issue or suggestion...">
@@ -770,7 +770,7 @@ function initFeedbackWidget() {
             <option value="feature">Feature Request</option>
             <option value="bug">Bug Report</option>
           </select>
-          <button class="feedback-send" id="feedbackSend">Send</button>
+          <button type="button" class="feedback-send" id="feedbackSend">Send</button>
         </div>
       </div>
     </div>
@@ -820,7 +820,9 @@ function initFeedbackWidget() {
     input.value = '';
   }
 
-  sendBtn.addEventListener('click', () => {
+  sendBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     sendFeedbackMessage(input.value, catSelect.value);
   });
 
@@ -833,7 +835,9 @@ function initFeedbackWidget() {
 
   // Quick action buttons
   document.querySelectorAll('.quick-action-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       sendFeedbackMessage(btn.dataset.msg, btn.dataset.cat);
     });
   });
