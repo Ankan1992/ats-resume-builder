@@ -1122,7 +1122,30 @@ function parseExperience(lines) {
         // We have a current entry — this is a description line
         const cleanLine = line.replace(/^[-•▪►★✓✔→●◆■]\s*/, '').trim();
         if (cleanLine) {
-          current.description += (current.description ? '\n' : '') + cleanLine;
+          // Detect continuation lines (PDF line-wrap artifacts):
+          // A line is a continuation if it does NOT start with a bullet marker,
+          // is relatively short (< 80 chars), starts with a lowercase letter,
+          // and the previous description line doesn't end with a sentence-ending punctuation.
+          const isNewBullet = /^[-•▪►★✓✔→●◆■]/.test(line);
+          const startsLower = /^[a-z]/.test(cleanLine);
+          const descLines = current.description.split('\n');
+          const lastDescLine = descLines.length > 0 ? descLines[descLines.length - 1] : '';
+          const lastEndsClean = /[.;:!?]$/.test(lastDescLine.trim());
+
+          // A continuation line is one that:
+          // - Has no bullet marker in the original line
+          // - Previous description line doesn't end with sentence-ending punctuation
+          // - Either starts lowercase OR is short enough to be a wrapped fragment
+          const looksLikeContinuation = !isNewBullet && current.description && !lastEndsClean &&
+            (startsLower || (!isTitleLike(cleanLine) && !isCompanyLike(cleanLine) && !DATE_RANGE_REGEX.test(cleanLine)));
+
+          if (looksLikeContinuation) {
+            // Continuation of previous line — append with space instead of newline
+            descLines[descLines.length - 1] = lastDescLine + ' ' + cleanLine;
+            current.description = descLines.join('\n');
+          } else {
+            current.description += (current.description ? '\n' : '') + cleanLine;
+          }
         }
       }
     }
